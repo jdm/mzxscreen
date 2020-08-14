@@ -1,4 +1,5 @@
-use libmzx::{World, load_world, render};
+use libmzx::{Counters, World, load_world, render};
+use libmzx::board::{enter_board, update_board};
 use std::env;
 use std::fs::File;
 use std::io::{BufWriter, Read};
@@ -36,6 +37,15 @@ impl libmzx::Renderer for Framebuffer {
     }
 }
 
+struct DummyAudio;
+impl libmzx::audio::AudioEngine for DummyAudio {
+    fn mod_fade_in(&self, _file_path: &str) {}
+    fn load_module(&self, _file_path: &str) {}
+    fn end_module(&self) {}
+    fn mod_fade_out(&self) {}
+    fn set_mod_order(&self, _order: i32) {}
+}
+
 fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
     let world_data = match File::open(&world_path) {
         Ok(mut file) => {
@@ -49,7 +59,7 @@ fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
         }
     };
 
-    let world = match load_world(&world_data) {
+    let mut world = match load_world(&world_data) {
         Ok(world) => world,
         Err(e) => {
             println!("Error reading {} ({:?})", world_path.display(), e);
@@ -57,11 +67,38 @@ fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
         }
     };
 
-    let _world_path = Path::new(&world_path).parent().unwrap();
+    let world_path = Path::new(&world_path).parent().unwrap();
     let (board_id, is_title_screen) = match board_id {
         Some(0) | None => (0, true),
         Some(id) => (id, false),
     };
+
+    let audio = DummyAudio;
+
+    let player_pos = world.boards[board_id].player_pos;
+    enter_board(
+        &mut world.state,
+        &audio,
+        &mut world.boards[board_id],
+        player_pos,
+        &mut world.all_robots
+    );
+
+    let mut counters = Counters::new();
+    let boards: Vec<_> = world.boards.iter().map(|b| b.title.clone()).collect();
+
+    let _ = update_board(
+        &mut world.state,
+        &audio,
+        None,
+        &world_path,
+        &mut counters,
+        &boards,
+        &mut world.boards[board_id],
+        board_id,
+        &mut world.all_robots
+    );
+
     let mut canvas = Framebuffer([0; BUFFER_SIZE]);
     render_game(&world, board_id, &mut canvas, is_title_screen);
 
