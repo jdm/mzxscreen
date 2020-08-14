@@ -68,9 +68,9 @@ fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
     };
 
     let world_path = Path::new(&world_path).parent().unwrap();
-    let (board_id, is_title_screen) = match board_id {
-        Some(0) | None => (0, true),
-        Some(id) => (id, false),
+    let board_id = match board_id {
+        None => random_number::random!(0..world.boards.len()),
+        Some(id) => id,
     };
 
     let audio = DummyAudio;
@@ -100,7 +100,7 @@ fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
     );
 
     let mut canvas = Framebuffer([0; BUFFER_SIZE]);
-    render_game(&world, board_id, &mut canvas, is_title_screen);
+    render_game(&world, board_id, &mut canvas, board_id == 0);
 
     let file = File::create(img_path).unwrap();
     let ref mut w = BufWriter::new(file);

@@ -1,12 +1,6 @@
-[package]
-name = "mzxscreen"
-version = "0.1.0"
-authors = ["Josh Matthews <josh@joshmatthews.net>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-libmzx = { path = "../libmzx" }
-env_logger = "0.7"
-png = "0.16"
+[workspace]
+members = [
+    "capture",
+    "info",
+    "populate",
+]
