@@ -3,4 +3,5 @@ members = [
     "capture",
     "info",
     "populate",
+    "tweet",
 ]

@@ -1,0 +1,12 @@
+[package]
+name = "tweet"
+version = "0.1.0"
+authors = ["Josh Matthews <josh@joshmatthews.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egg-mode = "0.15"
+serde_json = "1"
+tokio = "0.2"
