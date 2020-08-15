@@ -60,8 +60,8 @@ fn main() {
     let release = info.next().unwrap().text_contents();
 
     let json = format!(
-        "{{'title': '{}', 'author': '{}', 'date': '{}', 'url': '{}'}}",
-        name, author, release, game_url,
+        "{{\"title\": \"{}\", \"author\": \"{}\", \"date\": \"{}\", \"url\": \"{}\"}}",
+        name, author, release.split('-').next().unwrap(), game_url,
     );
 
     let download = document

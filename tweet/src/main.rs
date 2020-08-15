@@ -31,10 +31,10 @@ impl Config {
     async fn load_inner() -> Option<Self> {
         //IMPORTANT: make an app for yourself at apps.twitter.com and get your
         //key/secret into these files; these examples won't work without them
-        /*let consumer_key = include_str!("consumer_key").trim();
-        let consumer_secret = include_str!("consumer_secret").trim();*/
-        let consumer_key = std::env::var("CONSUMER_KEY").unwrap();
-        let consumer_secret = std::env::var("CONSUMER_SECRET").unwrap();
+        let consumer_key = include_str!("../../consumer_key").trim();
+        let consumer_secret = include_str!("../../consumer_secret").trim();
+        /*let consumer_key = std::env::var("CONSUMER_KEY").unwrap();
+        let consumer_secret = std::env::var("CONSUMER_SECRET").unwrap();*/
 
         let con_token = egg_mode::KeyPair::new(consumer_key, consumer_secret);
 
@@ -125,8 +125,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load().await;
     
     let image_name = std::env::args().nth(1).unwrap();
+    let data_name = std::env::args().nth(2).unwrap();
 
-    let data_name = std::env::args().nth(1).unwrap();
     let data = fs::read_to_string(&data_name).unwrap();
     let v: serde_json::Value = serde_json::from_str(&data).unwrap();
     let title = v.get("title").unwrap().as_str().unwrap();
