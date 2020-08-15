@@ -10,9 +10,10 @@ const WIDTH: usize = 80;
 const HEIGHT: usize = 25;
 const CHAR_BYTES: usize = 14;
 const CHAR_WIDTH: usize = 8;
-const BYTES_PER_PIXEL: usize = 4;
+const BYTES_PER_PIXEL: usize = 3;
 const BUFFER_SIZE: usize = WIDTH * HEIGHT * CHAR_WIDTH * CHAR_BYTES * BYTES_PER_PIXEL;
 
+#[derive(Clone, PartialEq)]
 struct Framebuffer([u8; BUFFER_SIZE]);
 
 impl libmzx::Renderer for Framebuffer {
@@ -27,7 +28,7 @@ impl libmzx::Renderer for Framebuffer {
         let stride = WIDTH * CHAR_WIDTH;
         let start = y * stride + x;
         let pixels = &mut self.0[start * BYTES_PER_PIXEL..(start + 1) * BYTES_PER_PIXEL];
-        pixels.copy_from_slice(&[r, g, b, 255]);
+        pixels.copy_from_slice(&[r, g, b]);
     }
 
     fn clear(&mut self) {
@@ -69,12 +70,18 @@ fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
 
     let world_path = Path::new(&world_path).parent().unwrap();
     let board_id = match board_id {
-        None => random_number::random!(0..world.boards.len()),
+        None => loop {
+            let id = random_number::random!(0..world.boards.len());
+            if world.boards[id].width != 0 && world.boards[id].height != 0 {
+                break id;
+            }
+        }
         Some(id) => id,
     };
 
     let audio = DummyAudio;
 
+    println!("Capturing board {}: {}", board_id, world.boards[board_id].title.to_string());
     let player_pos = world.boards[board_id].player_pos;
     enter_board(
         &mut world.state,
@@ -87,26 +94,60 @@ fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
     let mut counters = Counters::new();
     let boards: Vec<_> = world.boards.iter().map(|b| b.title.clone()).collect();
 
-    let _ = update_board(
-        &mut world.state,
-        &audio,
-        None,
-        &world_path,
-        &mut counters,
-        &boards,
-        &mut world.boards[board_id],
-        board_id,
-        &mut world.all_robots
-    );
-
     let mut canvas = Framebuffer([0; BUFFER_SIZE]);
-    render_game(&world, board_id, &mut canvas, board_id == 0);
+    const TIMEOUT: usize = 250;
+    const MAX_DELAY: usize = 15;
+    let mut delay = MAX_DELAY;
+    let mut last_frame = canvas.clone();
+    let mut cycles = 0;
+    loop {
+        cycles += 1;
+        let _ = update_board(
+            &mut world.state,
+            &audio,
+            None,
+            &world_path,
+            &mut counters,
+            &boards,
+            &mut world.boards[board_id],
+            board_id,
+            &mut world.all_robots
+        );
+
+        render_game(&world, board_id, &mut canvas, board_id == 0);
+
+        if cycles == TIMEOUT {
+            println!("Heuristics gave up after {} cycles.", TIMEOUT);
+            break;
+        }
+
+        let pixels = &canvas.0[0..BYTES_PER_PIXEL];
+        if canvas.0.chunks(BYTES_PER_PIXEL).any(|p| p != pixels) {
+            // First frame is not a uniform colour, let's take it.
+            if cycles == 1 {
+                break;
+            }
+            if last_frame != canvas {
+                // Wait for some cycles to look for a stable image;
+                delay = MAX_DELAY;
+            } else if delay == 0 {
+                // We've had a stable image for a number of cycles, take it.
+                break;
+            } else {
+                // This image is stable, so it's still a candidate.
+                delay -= 1;
+            }
+        }
+        last_frame = canvas.clone();
+    }
+
+    println!("Ran {} cycles before non-uniform frame.", cycles);
 
     let file = File::create(img_path).unwrap();
     let ref mut w = BufWriter::new(file);
 
     let mut encoder = png::Encoder::new(w, WIDTH as u32 * 8, HEIGHT as u32 * 14);
-    encoder.set_color(png::ColorType::RGBA);
+    encoder.set_color(png::ColorType::RGB);
     encoder.set_depth(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
     writer.write_image_data(&canvas.0).unwrap();
