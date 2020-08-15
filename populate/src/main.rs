@@ -6,11 +6,12 @@ use std::path::Path;
 
 fn main() {
     let zip_name = std::env::args().nth(1).unwrap();
+    let json_name = std::env::args().nth(2).unwrap();
 
     //TODO: figure out total pages
     //let resp = ureq::get("https://www.digitalmzx.com/search.php?browse=ALL")
 
-    let body = loop {
+    let (body, game_url) = loop {
         let max_pages = 37;
         let page = random!(0..=max_pages);
         let page_url = format!("https://www.digitalmzx.com/search.php?browse=ALL&page={}", page);
@@ -43,11 +44,26 @@ fn main() {
             body.contains("<td>Demo/Unfinished</td>") ||
             body.contains("<td>Engine/Resource</td>")
         {
-            break body;
+            break (body, game_url);
         }
     };
 
     let document = kuchiki::parse_html().one(&*body);
+
+    let mut info = document
+        .select("#showcase table tbody tr td")
+        .unwrap();
+    let name = info.next().unwrap().text_contents();
+    let author = info.next().unwrap();
+    let author = author.as_node().first_child().unwrap().text_contents();
+    let _category = info.next();
+    let release = info.next().unwrap().text_contents();
+
+    let json = format!(
+        "{{'title': '{}', 'author': '{}', 'date': '{}', 'url': '{}'}}",
+        name, author, release, game_url,
+    );
+
     let download = document
         .select("#downloadList a")
         .unwrap()
@@ -69,6 +85,7 @@ fn main() {
     let dir_name = "unzipped";
     let _ = fs::remove_dir_all(dir_name);
     fs::write(Path::new(&zip_name), bytes).unwrap();
+    fs::write(Path::new(&json_name), json).unwrap();
     fs::DirBuilder::new()
         .create(dir_name)
         .unwrap();

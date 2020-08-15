@@ -4,7 +4,7 @@ set -o nounset
 set -o pipefail
 
 rm -f image.png download.zip
-cargo run --bin populate download.zip
+cargo run --bin populate download.zip output.json
 for archive in `find unzipped -name \*.zip -o -name \*.ZIP`; do
     unzip -d unzipped ${archive}
 done
