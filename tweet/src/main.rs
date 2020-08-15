@@ -1,7 +1,7 @@
 use egg_mode::media::{get_status, media_types, upload_media, ProgressInfo};
 use egg_mode::tweet::DraftTweet;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::{Read, Write, stdout};
 use std::time::Duration;
 use tokio::time::delay_for;
 
@@ -138,21 +138,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut tweet = DraftTweet::new(tweet);
     let typ = media_types::image_png();
     let bytes = std::fs::read(image_name)?;
+    println!("About to upload screenshot");
     let handle = upload_media(&bytes, &typ, &config.token).await?;
+    println!("Uploaded screenshot");
     tweet.add_media(handle.id.clone());
+    println!("Added media");
 
     for ct in 0..=60u32 {
+        println!("Getting status");
         match get_status(handle.id.clone(), &config.token).await?.progress {
             None | Some(ProgressInfo::Success) => {
-                //println!("\nMedia sucessfully processed");
+                println!("\nMedia sucessfully processed");
                 break;
             }
             Some(ProgressInfo::Pending(_)) | Some(ProgressInfo::InProgress(_)) => {
-                //print!(".");
-                //stdout().flush()?;
+                print!(".");
+                stdout().flush()?;
                 delay_for(Duration::from_secs(1)).await;
             }
-            Some(ProgressInfo::Failed(err)) => Err(err)?,
+            Some(ProgressInfo::Failed(err)) => {
+                println!("\nFailed");
+                Err(err)?
+            },
         }
         if ct == 60 {
             Err("Error: timeout")?
