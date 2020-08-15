@@ -12,7 +12,7 @@ fn main() {
     //let resp = ureq::get("https://www.digitalmzx.com/search.php?browse=ALL")
 
     let (body, game_url) = loop {
-        let max_pages = 37;
+        let max_pages = 36;
         let page = random!(0..=max_pages);
         let page_url = format!("https://www.digitalmzx.com/search.php?browse=ALL&page={}", page);
         println!("Fetching {}", page_url);
