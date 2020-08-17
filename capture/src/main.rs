@@ -1,5 +1,5 @@
-use libmzx::{Counters, World, load_world, render};
 use libmzx::board::{enter_board, update_board};
+use libmzx::{load_world, render, Counters, World};
 use std::env;
 use std::fs::{self, File};
 use std::io::{BufWriter, Read};
@@ -17,14 +17,7 @@ const BUFFER_SIZE: usize = WIDTH * HEIGHT * CHAR_WIDTH * CHAR_BYTES * BYTES_PER_
 struct Framebuffer([u8; BUFFER_SIZE]);
 
 impl libmzx::Renderer for Framebuffer {
-    fn put_pixel(
-        &mut self,
-        x: usize,
-        y: usize,
-        r: u8,
-        g: u8,
-        b: u8,
-    ) {
+    fn put_pixel(&mut self, x: usize, y: usize, r: u8, g: u8, b: u8) {
         let stride = WIDTH * CHAR_WIDTH;
         let start = y * stride + x;
         let pixels = &mut self.0[start * BYTES_PER_PIXEL..(start + 1) * BYTES_PER_PIXEL];
@@ -50,7 +43,10 @@ impl libmzx::audio::AudioEngine for DummyAudio {
 fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<usize>) {
     let data = fs::read_to_string(&data_path).unwrap();
     let mut v: serde_json::Value = serde_json::from_str(&data).unwrap();
-    v.as_object_mut().unwrap().insert("world".to_string(), world_path.file_name().unwrap().to_str().unwrap().into());
+    v.as_object_mut().unwrap().insert(
+        "world".to_string(),
+        world_path.file_name().unwrap().to_str().unwrap().into(),
+    );
 
     let world_data = match File::open(&world_path) {
         Ok(mut file) => {
@@ -79,23 +75,30 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
             if world.boards[id].width != 0 && world.boards[id].height != 0 {
                 break id;
             }
-        }
+        },
         Some(id) => id,
     };
 
     let audio = DummyAudio;
 
-    println!("Capturing board {}: {}", board_id, world.boards[board_id].title.to_string());
+    println!(
+        "Capturing board {}: {}",
+        board_id,
+        world.boards[board_id].title.to_string()
+    );
     let player_pos = world.boards[board_id].player_pos;
     enter_board(
         &mut world.state,
         &audio,
         &mut world.boards[board_id],
         player_pos,
-        &mut world.all_robots
+        &mut world.all_robots,
     );
 
-    v.as_object_mut().unwrap().insert("board".to_string(), world.boards[board_id].title.to_string().into());
+    v.as_object_mut().unwrap().insert(
+        "board".to_string(),
+        world.boards[board_id].title.to_string().into(),
+    );
 
     let mut counters = Counters::new();
     let boards: Vec<_> = world.boards.iter().map(|b| b.title.clone()).collect();
@@ -117,7 +120,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
             &boards,
             &mut world.boards[board_id],
             board_id,
-            &mut world.all_robots
+            &mut world.all_robots,
         );
 
         render_game(&world, board_id, &mut canvas, board_id == 0);
@@ -161,12 +164,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
     fs::write(data_path, &serde_json::to_string(&v).unwrap()).unwrap();
 }
 
-fn render_game(
-    world: &World,
-    board_id: usize,
-    canvas: &mut Framebuffer,
-    is_title_screen: bool,
-) {
+fn render_game(world: &World, board_id: usize, canvas: &mut Framebuffer, is_title_screen: bool) {
     let robots_start = world.boards[board_id].robot_range.0;
     let robots_end = robots_start + world.boards[board_id].robot_range.1;
     let robots = &world.all_robots[robots_start..robots_end];
@@ -188,8 +186,15 @@ fn main() {
     env_logger::init();
     let args: Vec<_> = env::args().collect();
     if args.len() < 3 {
-        println!("Usage: cargo run /path/to/img.png /path/to/data.json /path/to/world.mzx [board id]")
+        println!(
+            "Usage: cargo run /path/to/img.png /path/to/data.json /path/to/world.mzx [board id]"
+        )
     } else {
-        run(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3]), args.get(4).and_then(|a| a.parse().ok()));
+        run(
+            Path::new(&args[1]),
+            Path::new(&args[2]),
+            Path::new(&args[3]),
+            args.get(4).and_then(|a| a.parse().ok()),
+        );
     }
 }

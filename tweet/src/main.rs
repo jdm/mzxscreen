@@ -1,10 +1,9 @@
 use egg_mode::media::{get_status, media_types, upload_media, ProgressInfo};
 use egg_mode::tweet::DraftTweet;
 use std::fs;
-use std::io::{Read, Write, stdout};
+use std::io::{stdout, Read, Write};
 use std::time::Duration;
 use tokio::time::delay_for;
-
 
 //This is not an example that can be built with cargo! This is some helper code for the other
 //examples so they can load access keys from the same place.
@@ -68,7 +67,9 @@ impl Config {
                 println!("Welcome back, {}!\n", username);
             }
         } else {
-            let request_token = egg_mode::auth::request_token(&con_token, "oob").await.unwrap();
+            let request_token = egg_mode::auth::request_token(&con_token, "oob")
+                .await
+                .unwrap();
 
             println!("Go to the following URL, sign in, and give me the PIN that comes back:");
             println!("{}", egg_mode::auth::authorize_url(&request_token));
@@ -123,7 +124,7 @@ impl Config {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load().await;
-    
+
     let image_name = std::env::args().nth(1).unwrap();
     let data_name = std::env::args().nth(2).unwrap();
 
@@ -159,7 +160,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Some(ProgressInfo::Failed(err)) => {
                 println!("\nFailed");
                 Err(err)?
-            },
+            }
         }
         if ct == 60 {
             Err("Error: timeout")?

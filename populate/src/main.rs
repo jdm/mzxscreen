@@ -14,11 +14,12 @@ fn main() {
     let (body, game_url) = loop {
         let max_pages = 36;
         let page = random!(0..=max_pages);
-        let page_url = format!("https://www.digitalmzx.com/search.php?browse=ALL&page={}", page);
+        let page_url = format!(
+            "https://www.digitalmzx.com/search.php?browse=ALL&page={}",
+            page
+        );
         println!("Fetching {}", page_url);
-        let resp = ureq::get(&page_url)
-            .timeout_connect(5000)
-            .call();
+        let resp = ureq::get(&page_url).timeout_connect(5000).call();
         assert_eq!(resp.status(), 200);
         let body = resp.into_string().unwrap();
         let document = kuchiki::parse_html().one(&*body);
@@ -32,17 +33,15 @@ fn main() {
 
         let game_url = format!("https://www.digitalmzx.com/{}", games[choice]);
         println!("Fetching {}", game_url);
-        let resp = ureq::get(&game_url)
-            .timeout_connect(5000)
-            .call();
+        let resp = ureq::get(&game_url).timeout_connect(5000).call();
         assert_eq!(resp.status(), 200);
         let body = resp.into_string().unwrap();
 
-        if body.contains("<td>Game</td>") ||
-            body.contains("<td>Short Competition</td>") ||
-            body.contains("<td>Competition</td>") ||
-            body.contains("<td>Demo/Unfinished</td>") ||
-            body.contains("<td>Engine/Resource</td>")
+        if body.contains("<td>Game</td>")
+            || body.contains("<td>Short Competition</td>")
+            || body.contains("<td>Competition</td>")
+            || body.contains("<td>Demo/Unfinished</td>")
+            || body.contains("<td>Engine/Resource</td>")
         {
             break (body, game_url);
         }
@@ -50,9 +49,7 @@ fn main() {
 
     let document = kuchiki::parse_html().one(&*body);
 
-    let mut info = document
-        .select("#showcase table tbody tr td")
-        .unwrap();
+    let mut info = document.select("#showcase table tbody tr td").unwrap();
     let name = info.next().unwrap().text_contents();
     let author = info.next().unwrap();
     let author = author.as_node().first_child().unwrap().text_contents();
@@ -61,7 +58,10 @@ fn main() {
 
     let json = format!(
         "{{\"title\": \"{}\", \"author\": \"{}\", \"date\": \"{}\", \"url\": \"{}\"}}",
-        name, author, release.split('-').next().unwrap(), game_url,
+        name,
+        author,
+        release.split('-').next().unwrap(),
+        game_url,
     );
 
     let download = document
@@ -86,8 +86,6 @@ fn main() {
     let _ = fs::remove_dir_all(dir_name);
     fs::write(Path::new(&zip_name), bytes).unwrap();
     fs::write(Path::new(&json_name), json).unwrap();
-    fs::DirBuilder::new()
-        .create(dir_name)
-        .unwrap();
+    fs::DirBuilder::new().create(dir_name).unwrap();
     assert_eq!(unzip_rs::unzip(&zip_name, dir_name), 0);
 }
