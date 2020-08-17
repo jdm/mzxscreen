@@ -91,6 +91,7 @@ dependencies = [
  "libmzx",
  "png",
  "random-number",
+ "serde_json",
 ]
 
 [[package]]

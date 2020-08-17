@@ -11,3 +11,4 @@ libmzx = { path = "../../libmzx" }
 env_logger = "0.7"
 png = "0.16"
 random-number = "0.1"
+serde_json = "1"

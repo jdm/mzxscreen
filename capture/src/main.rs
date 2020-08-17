@@ -1,7 +1,7 @@
 use libmzx::{Counters, World, load_world, render};
 use libmzx::board::{enter_board, update_board};
 use std::env;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{BufWriter, Read};
 use std::path::Path;
 use std::process::exit;
@@ -47,7 +47,11 @@ impl libmzx::audio::AudioEngine for DummyAudio {
     fn set_mod_order(&self, _order: i32) {}
 }
 
-fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
+fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<usize>) {
+    let data = fs::read_to_string(&data_path).unwrap();
+    let mut v: serde_json::Value = serde_json::from_str(&data).unwrap();
+    v.as_object_mut().unwrap().insert("world".to_string(), world_path.file_name().unwrap().to_str().unwrap().into());
+
     let world_data = match File::open(&world_path) {
         Ok(mut file) => {
             let mut v = vec![];
@@ -90,6 +94,8 @@ fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
         player_pos,
         &mut world.all_robots
     );
+
+    v.as_object_mut().unwrap().insert("board".to_string(), world.boards[board_id].title.to_string().into());
 
     let mut counters = Counters::new();
     let boards: Vec<_> = world.boards.iter().map(|b| b.title.clone()).collect();
@@ -151,6 +157,8 @@ fn run(img_path: &Path, world_path: &Path, board_id: Option<usize>) {
     encoder.set_depth(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
     writer.write_image_data(&canvas.0).unwrap();
+
+    fs::write(data_path, &serde_json::to_string(&v).unwrap()).unwrap();
 }
 
 fn render_game(
@@ -180,8 +188,8 @@ fn main() {
     env_logger::init();
     let args: Vec<_> = env::args().collect();
     if args.len() < 3 {
-        println!("Usage: cargo run /path/to/img.png /path/to/world.mzx [board id]")
+        println!("Usage: cargo run /path/to/img.png /path/to/data.json /path/to/world.mzx [board id]")
     } else {
-        run(Path::new(&args[1]), Path::new(&args[2]), args.get(3).and_then(|a| a.parse().ok()));
+        run(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3]), args.get(4).and_then(|a| a.parse().ok()));
     }
 }
