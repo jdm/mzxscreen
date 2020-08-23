@@ -50,7 +50,18 @@ fn main() {
     let document = kuchiki::parse_html().one(&*body);
 
     let mut info = document.select("#showcase table tbody tr td").unwrap();
-    let name = info.next().unwrap().text_contents();
+    let mut name = info.next().unwrap().text_contents();
+
+    let lower_name = name.to_lowercase();
+    for special in &[", a", ", an", ", the"] {
+        if lower_name.ends_with(special) {
+            let end = name.len() - special.len();
+            let suffix = &name[end..];
+            name = format!("{} {}", suffix.split(" ").nth(1).unwrap(), &name[..end]);
+            break;
+        }
+    }
+
     let author = info.next().unwrap();
     let author = author.as_node().first_child().unwrap().text_contents();
     let _category = info.next();
