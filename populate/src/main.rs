@@ -68,7 +68,7 @@ fn main() {
     let release = info.next().unwrap().text_contents();
 
     let json = format!(
-        "{{\"title\": \"{}\", \"author\": \"{}\", \"date\": \"{}\", \"url\": \"{}\"}}",
+        "{{\"title\": \"{}\", \"author\": \"{}\", \"date\": \"{}\", \"url\": \"{}\"}}\n",
         name,
         author,
         release.split('-').next().unwrap(),
