@@ -100,6 +100,16 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
         world.boards[board_id].title.to_string().into(),
     );
 
+    let title = v.as_object().unwrap().get("title").unwrap().as_str().unwrap().to_string();
+    if ["BKZX", "Day of Zeux", "MZX Olympics", "Week of Zeux", "Weekend of Zeux"]
+        .iter()
+        .any(|t| title.contains(t))
+    {
+        let obj = v.as_object_mut().unwrap();
+        obj.insert("title".to_string(), world.boards[0].title.to_string().into());
+        obj.insert("author".to_string(), title.into());
+    }
+
     let mut counters = Counters::new();
     let boards: Vec<_> = world.boards.iter().map(|b| b.title.clone()).collect();
 
