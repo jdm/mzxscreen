@@ -67,13 +67,12 @@ fn main() {
     let _category = info.next();
     let release = info.next().unwrap().text_contents();
 
-    let json = format!(
-        "{{\"title\": \"{}\", \"author\": \"{}\", \"date\": \"{}\", \"url\": \"{}\"}}\n",
-        name,
-        author,
-        release.split('-').next().unwrap(),
-        game_url,
-    );
+    let json = serde_json::json!({
+        "title": name,
+        "author": author,
+        "date": release.split('-').next().unwrap(),
+        "url": game_url,
+    });
 
     let download = document
         .select("#downloadList a")
@@ -96,7 +95,11 @@ fn main() {
     let dir_name = "unzipped";
     let _ = fs::remove_dir_all(dir_name);
     fs::write(Path::new(&zip_name), bytes).unwrap();
-    fs::write(Path::new(&json_name), json).unwrap();
+    fs::write(
+        Path::new(&json_name),
+        &serde_json::to_string(&json).unwrap(),
+    )
+    .unwrap();
     fs::DirBuilder::new().create(dir_name).unwrap();
     assert_eq!(unzip_rs::unzip(&zip_name, dir_name), 0);
 }

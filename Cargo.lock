@@ -1060,6 +1060,7 @@ version = "0.1.0"
 dependencies = [
  "kuchiki",
  "random-number",
+ "serde_json",
  "unzip-rs",
  "ureq",
 ]
@@ -1826,6 +1827,7 @@ name = "tweet"
 version = "0.1.0"
 dependencies = [
  "egg-mode",
+ "env_logger",
  "serde_json",
  "tokio",
 ]
