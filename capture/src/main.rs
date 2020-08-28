@@ -81,11 +81,15 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
 
     let audio = DummyAudio;
 
-    println!(
-        "Capturing board {}: {}",
-        board_id,
-        world.boards[board_id].title.to_string()
-    );
+    let world_title: String = world.boards[0].title.iter().map(|&c| c as char).collect();
+
+    let board_title: String = world.boards[board_id]
+        .title
+        .iter()
+        .map(|&c| c as char)
+        .collect();
+    println!("Capturing board {}: {}", board_id, board_title,);
+
     let player_pos = world.boards[board_id].player_pos;
     enter_board(
         &mut world.state,
@@ -95,10 +99,9 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
         &mut world.all_robots,
     );
 
-    v.as_object_mut().unwrap().insert(
-        "board".to_string(),
-        world.boards[board_id].title.to_string().into(),
-    );
+    v.as_object_mut()
+        .unwrap()
+        .insert("board".to_string(), board_title.into());
 
     let title = v
         .as_object()
@@ -119,10 +122,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
     .any(|t| title.contains(t))
     {
         let obj = v.as_object_mut().unwrap();
-        obj.insert(
-            "title".to_string(),
-            world.boards[0].title.to_string().into(),
-        );
+        obj.insert("title".to_string(), world_title.into());
         obj.insert("author".to_string(), title.into());
     }
 
