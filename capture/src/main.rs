@@ -135,6 +135,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
     let mut delay = MAX_DELAY;
     let mut last_frame = canvas.clone();
     let mut cycles = 0;
+    let is_title_screen = board_id == 0 && world.boards.len() > 1;
     loop {
         cycles += 1;
         let _ = update_board(
@@ -149,7 +150,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
             &mut world.all_robots,
         );
 
-        render_game(&world, board_id, &mut canvas, board_id == 0);
+        render_game(&world, board_id, &mut canvas, is_title_screen);
 
         if cycles == TIMEOUT {
             println!("Heuristics gave up after {} cycles.", TIMEOUT);
