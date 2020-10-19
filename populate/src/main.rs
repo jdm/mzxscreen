@@ -3,6 +3,7 @@ use random_number::random;
 use std::fs;
 use std::io::Read;
 use std::path::Path;
+use std::process::Command;
 
 fn main() {
     let zip_name = std::env::args().nth(1).unwrap();
@@ -101,5 +102,9 @@ fn main() {
     )
     .unwrap();
     fs::DirBuilder::new().create(dir_name).unwrap();
-    assert_eq!(unzip_rs::unzip(&zip_name, dir_name), 0);
+    let status = Command::new("unzip")
+        .args(&[&zip_name, "-d", dir_name])
+        .status()
+        .unwrap();
+    assert!(status.success());
 }
