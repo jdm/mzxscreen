@@ -72,7 +72,8 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
     let board_id = match board_id {
         None => loop {
             let id = random_number::random!(0..world.boards.len());
-            if world.boards[id].width != 0 && world.boards[id].height != 0 {
+            let board = &world.boards[id].0;
+            if board.width != 0 && board.height != 0 {
                 break id;
             }
         },
@@ -81,22 +82,24 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
 
     let audio = DummyAudio;
 
-    let world_title: String = world.boards[0].title.iter().map(|&c| c as char).collect();
+    let world_title: String = world.boards[0].0.title.iter().map(|&c| c as char).collect();
 
-    let board_title: String = world.boards[board_id]
+    let (ref mut board, ref mut robots) = world.boards[board_id];
+    let board_title: String = board
         .title
         .iter()
         .map(|&c| c as char)
         .collect();
     println!("Capturing board {}: {}", board_id, board_title,);
 
-    let player_pos = world.boards[board_id].player_pos;
+    let player_pos = board.player_pos;
     enter_board(
         &mut world.state,
         &audio,
-        &mut world.boards[board_id],
+        board,
         player_pos,
-        &mut world.all_robots,
+        robots,
+        &mut world.global_robot
     );
 
     v.as_object_mut()
@@ -127,7 +130,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
     }
 
     let mut counters = Counters::new();
-    let boards: Vec<_> = world.boards.iter().map(|b| b.title.clone()).collect();
+    let boards: Vec<_> = world.boards.iter().map(|(b, _)| b.title.clone()).collect();
 
     let mut canvas = Framebuffer([0; BUFFER_SIZE]);
     const TIMEOUT: usize = 250;
@@ -138,6 +141,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
     let is_title_screen = board_id == 0 && world.boards.len() > 1;
     loop {
         cycles += 1;
+        let (ref mut board, ref mut robots) = world.boards[board_id];
         let _ = update_board(
             &mut world.state,
             &audio,
@@ -145,9 +149,10 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
             &world_path,
             &mut counters,
             &boards,
-            &mut world.boards[board_id],
+            board,
             board_id,
-            &mut world.all_robots,
+            robots,
+            &mut world.global_robot,
         );
 
         render_game(&world, board_id, &mut canvas, is_title_screen);
@@ -192,18 +197,16 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
 }
 
 fn render_game(world: &World, board_id: usize, canvas: &mut Framebuffer, is_title_screen: bool) {
-    let robots_start = world.boards[board_id].robot_range.0;
-    let robots_end = robots_start + world.boards[board_id].robot_range.1;
-    let robots = &world.all_robots[robots_start..robots_end];
+    let board = &world.boards[board_id].0;
     render(
         &world.state,
         (
-            world.boards[board_id].upper_left_viewport,
-            world.boards[board_id].viewport_size,
+            board.upper_left_viewport,
+            board.viewport_size,
         ),
-        world.boards[board_id].scroll_offset,
-        &world.boards[board_id],
-        robots,
+        board.scroll_offset,
+        &board,
+        &world.boards[board_id].1,
         canvas,
         is_title_screen,
     );
