@@ -94,7 +94,7 @@ fn main() {
     reader.read_to_end(&mut bytes).unwrap();
 
     let dir_name = "unzipped";
-    let _ = fs::remove_dir_all(dir_name);
+    fs::remove_dir_all(dir_name).unwrap();
     fs::write(Path::new(&zip_name), bytes).unwrap();
     fs::write(
         Path::new(&json_name),
