@@ -2,6 +2,7 @@
 set -o errexit
 set -o nounset
 set -o pipefail
+export RUST_BACKTRACE=1
 
 if [ -z "${1+x}" ]
   then
