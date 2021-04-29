@@ -681,6 +681,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "infer"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f92b41dab759f9e8427c03f519c344a14655490b8db548dac1e57a75b3258391"
+
+[[package]]
 name = "info"
 version = "0.1.0"
 dependencies = [
@@ -1083,6 +1089,7 @@ dependencies = [
 name = "populate"
 version = "0.1.0"
 dependencies = [
+ "infer",
  "kuchiki",
  "random-number",
  "serde_json",

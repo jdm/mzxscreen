@@ -102,9 +102,22 @@ fn main() {
     )
     .unwrap();
     fs::DirBuilder::new().create(dir_name).unwrap();
-    let status = Command::new("unzip")
-        .args(&[&zip_name, "-d", dir_name])
-        .status()
-        .unwrap();
-    assert!(status.success());
+    let mut f = fs::File::open(&zip_name).expect("no file found");
+    let mut bytes = [0; 10];
+    f.read(&mut bytes).expect("Couldn't read magic bytes");
+    if infer::archive::is_zip(&bytes) {
+        let status = Command::new("unzip")
+            .args(&[&zip_name, "-d", dir_name])
+            .status()
+            .unwrap();
+        assert!(status.success());
+    } else if infer::archive::is_rar(&bytes) {
+        let status = Command::new("unrar")
+            .args(&["x", &zip_name, dir_name])
+            .status()
+            .unwrap();
+        assert!(status.success());
+    } else {
+        eprintln!("Couldn't identify archive type.");
+    }
 }
