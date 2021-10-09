@@ -5,3 +5,6 @@ members = [
     "populate",
     "tweet",
 ]
+
+[profile.release]
+debug = true

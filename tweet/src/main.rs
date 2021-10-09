@@ -123,6 +123,7 @@ impl Config {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
     let config = Config::load().await;
 
     let image_name = std::env::args().nth(1).unwrap();
@@ -139,11 +140,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut tweet = DraftTweet::new(tweet);
     let typ = media_types::image_png();
     let bytes = std::fs::read(image_name)?;
-    println!("About to upload screenshot");
+    println!("About to upload screenshot: {} bytes", bytes.len());
     let handle = upload_media(&bytes, &typ, &config.token).await?;
-    println!("Uploaded screenshot");
+    println!("Uploaded screenshot: {:?} {:?}", handle, handle.progress);
     tweet.add_media(handle.id.clone());
     println!("Added media");
+    for i in 0..10 {
+        std::thread::sleep_ms(1000);
+        println!("Delaying {} secs", i);
+    }
 
     for ct in 0..=60u32 {
         println!("Getting status");
