@@ -1,4 +1,4 @@
-use libmzx::board::{enter_board, update_board};
+use libmzx::board::{enter_board, run_board_update};
 use libmzx::{load_world, render, Counters, World};
 use std::env;
 use std::fs::{self, File};
@@ -69,7 +69,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
     };
 
     let world_path = Path::new(&world_path).parent().unwrap();
-    let board_id = match board_id {
+    let mut board_id = match board_id {
         None => loop {
             let id = random_number::random!(0..world.boards.len());
             let board = &world.boards[id].0;
@@ -99,7 +99,8 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
         board,
         player_pos,
         robots,
-        &mut world.global_robot
+        &mut world.global_robot,
+        LabelAction::RunJustLoadedAndJustEntered,
     );
 
     v.as_object_mut()
@@ -141,18 +142,14 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
     let is_title_screen = board_id == 0 && world.boards.len() > 1;
     loop {
         cycles += 1;
-        let (ref mut board, ref mut robots) = world.boards[board_id];
-        let _ = update_board(
-            &mut world.state,
+        let _ = run_board_update(
+            &mut world,
             &audio,
-            None,
             &world_path,
             &mut counters,
             &boards,
-            board,
-            board_id,
-            robots,
-            &mut world.global_robot,
+            &mut board_id,
+            None,
         );
 
         render_game(&world, board_id, &mut canvas, is_title_screen);
