@@ -21,3 +21,4 @@ fi
 echo cargo run --bin capture image.png output.json "${world}" "$@"
 cargo run --bin capture image.png output.json "${world}" "$@"
 open image.png
+./mktweet.sh
