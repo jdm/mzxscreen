@@ -162,7 +162,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
         let pixels = &canvas.0[0..BYTES_PER_PIXEL];
         if canvas.0.chunks(BYTES_PER_PIXEL).any(|p| p != pixels) {
             // First frame is not a uniform colour, let's take it.
-            if cycles == 1 {
+            if false && cycles == 1 {
                 break;
             }
             if last_frame != canvas {
