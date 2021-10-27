@@ -1,4 +1,4 @@
-use libmzx::board::{enter_board, run_board_update};
+use libmzx::board::{enter_board, run_board_update, LabelAction};
 use libmzx::{load_world, render, Counters, World};
 use std::env;
 use std::fs::{self, File};
@@ -101,6 +101,7 @@ fn run(img_path: &Path, data_path: &Path, world_path: &Path, board_id: Option<us
         robots,
         &mut world.global_robot,
         LabelAction::RunJustLoadedAndJustEntered,
+        false,
     );
 
     v.as_object_mut()
